@@ -1,0 +1,12 @@
+# pgv.control
+# Comment line to provide additional information about the extension
+comment = 'Minimal vector extension'
+
+# Specifies the default version of the extension
+default_version = '0.0.1'
+
+# Indicates whether the extension is relocatable, allowing it to be moved to a different location (true by default)
+relocatable = true
+
+module_pathname = '$libdir/pgv'
+
