@@ -2,3 +2,4 @@
 *.obj
 *.bc
 *.so
+.vscode/*

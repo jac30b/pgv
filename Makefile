@@ -22,11 +22,14 @@ all: sql/$(EXTENSION)--$(EXTVERSION).sql
 sql/$(EXTENSION)--$(EXTVERSION).sql: sql/$(EXTENSION).sql
 	cp $< $@
 
-PG_CONFIG ?= pg_config
+PG_CONFIG ?= $(firstword $(shell command -v pg_config 2>/dev/null) $(wildcard /usr/pgsql-*/bin/pg_config) $(wildcard /usr/bin/pg_config))
 ifeq ($(shell uname -s), Darwin)
 	ifeq ($(shell uname -p), arm)
 		PG_CONFIG = /opt/homebrew/opt/postgresql@17/bin/pg_config
 	endif
+endif
+ifeq ($(strip $(PG_CONFIG)),)
+$(error could not find pg_config; install PostgreSQL development packages or run 'make install PG_CONFIG=/path/to/pg_config')
 endif
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
