@@ -23,6 +23,11 @@ sql/$(EXTENSION)--$(EXTVERSION).sql: sql/$(EXTENSION).sql
 	cp $< $@
 
 PG_CONFIG ?= pg_config
+ifeq ($(shell uname -s), Darwin)
+	ifeq ($(shell uname -p), arm)
+		PG_CONFIG = /opt/homebrew/opt/postgresql@17/bin/pg_config
+	endif
+endif
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
