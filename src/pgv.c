@@ -1,53 +1,63 @@
 #include "postgres.h"
 
+#include <math.h>
+
 #include "utils/array.h"
 #include "pgv.h"
+#include "pgv_utils.h"
 
 #include "fmgr.h"
+#include "utils/builtins.h"
+#include "libpq/pqformat.h"
+#include "port.h"
 
 PG_MODULE_MAGIC;
-
-
-int32 vec_sz(int32 dim) { return offsetof(Vec, data) + dim * sizeof(float); }
 
 // (cstring, oid, integer)
 PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_input);
 Datum vec_input(PG_FUNCTION_ARGS) {
   Vec *res;
+  int dim;
   char *str;
-  Oid typelem;
-  int32 typemod;
-  int sz;
+  float buf[MAX_VEC_DIM];
+  const char *err;
 
   str = PG_GETARG_CSTRING(0);
-  typelem = PG_GETARG_OID(1);
-  typemod = PG_GETARG_INT32(2);
 
-  elog(INFO, "input string: %s", str);
-  elog(INFO, "type element OID: %u", typelem);
-  elog(INFO, "type modifier: %d", typemod);
-  elog(INFO, "nargs: %d", PG_NARGS());
+  dim = vec_parse(str, buf, MAX_VEC_DIM, &err);
+  if (dim < 0)
+    ereport(ERROR, (errmsg("%s", err)));
 
-  if (typemod == -1) {
-    elog(WARNING, "typemod is -1, checking type info...");
+  res = palloc0(vec_sz(dim));
+  res->dim = dim;
+  for (int i = 0; i < dim; i++) {
+    res->data[i] = buf[i];
   }
-
-  sz = vec_sz(typemod);
-  res = (Vec *)palloc(sz);
-  SET_VARSIZE(res, sz);
-  res->dim = typemod;
-
+  SET_VARSIZE(res, vec_sz(dim));
   PG_RETURN_POINTER(res);
 }
 
 PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_output);
 Datum vec_output(PG_FUNCTION_ARGS) {
-  Vec* vec = (Vec*)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  Vec *vec = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  StringInfoData buf;
+  int i;
 
-  char* buf = psprintf("<%d>", vec->dim);
-  PG_RETURN_CSTRING(buf);
+  initStringInfo(&buf);
+  appendStringInfo(&buf, "<%d>[", vec->dim);
+  for (i = 0; i < vec->dim; i++) {
+    char *f;
+    if (i > 0)
+      appendStringInfoChar(&buf, ',');
+    f = DatumGetCString(
+        DirectFunctionCall1(float4out, Float4GetDatum(vec->data[i])));
+    appendStringInfoString(&buf, f);
+    pfree(f);
+  }
+  appendStringInfoChar(&buf, ']');
+
+  PG_RETURN_CSTRING(buf.data);
 }
-
 
 // cstring[]
 PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_typemodifier_in);
@@ -56,18 +66,15 @@ Datum vec_typemodifier_in(PG_FUNCTION_ARGS) {
   int32 *dim;
   int ndim;
 
-  elog(INFO, "vec_typemodifier_in called");
-  elog(INFO, "array is null: %d", arr == NULL);
-  
   dim = ArrayGetIntegerTypmods(arr, &ndim);
   elog(INFO, "ndim: %d", ndim);
-  
+
   if (ndim != 1) {
     ereport(ERROR, (errmsg("vec type must have exactly one type modifier")));
   }
 
   elog(INFO, "dim[0]: %d", dim[0]);
-  
+
   if (dim[0] <= 0) {
     ereport(ERROR, (errmsg("vec type dimension must be positive")));
   }
@@ -88,10 +95,26 @@ Datum vec_typemodifier_out(PG_FUNCTION_ARGS) {
   PG_RETURN_CSTRING(buf);
 }
 
-// PG_FUNCTION_INFO_V1(vector_out);
-// Datum vec_output(PG_FUNCTION_ARGS) {
-//   Vec* vec = (Vec*)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
-//   char* buf;
+PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_cosine_distance);
+Datum vec_cosine_distance(PG_FUNCTION_ARGS) {
+  Vec *a = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  Vec *b = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+  float similarity;
+  float distance;
 
-//   PG_RETURN_CSTRING(buf);
-// }
+  if (a->dim != b->dim)
+    ereport(
+        ERROR,
+        (errmsg("vectors must have the same dimension for cosine distance")));
+
+  similarity = vec_cosine_similarity_internal(a, b);
+  distance = 1.0f - similarity;
+
+  /* Clamp to [0, 1] to avoid floating point drift */
+  if (distance < 0.0f)
+    distance = 0.0f;
+  else if (distance > 1.0f)
+    distance = 1.0f;
+
+  PG_RETURN_FLOAT4(distance);
+}

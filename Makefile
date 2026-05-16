@@ -4,7 +4,7 @@ EXTVERSION = 0.0.1
 MODULE_big = pgv
 DATA = $(wildcard sql/*--*--*.sql)
 DATA_built = sql/$(EXTENSION)--$(EXTVERSION).sql
-OBJS = src/pgv.o
+OBJS = src/pgv.o src/pgv_utils.o
 
 OPTFLAGS = -march=native
 
@@ -34,4 +34,21 @@ endif
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
+TEST_DIR = test
+TEST_BIN = test_runner
+TEST_SRCS = $(wildcard $(TEST_DIR)/*.c)
+PG_INCLUDEDIR_SERVER = $(shell $(PG_CONFIG) --includedir-server)
+
+TEST_CFLAGS = -Wall -Wextra -g -I./src -I$(PG_INCLUDEDIR_SERVER)
+TEST_LIBS = -lcriterion -lm
+
+# Run all tests or a specific file: make test_internal FILE=test_cosine.c
+.PHONY: test_internal
+test_internal:
+ifeq ($(FILE),)
+	$(CC) $(TEST_SRCS) src/pgv_utils.c $(TEST_CFLAGS) $(TEST_LIBS) -o $(TEST_BIN)
+else
+	$(CC) $(TEST_DIR)/$(FILE) src/pgv_utils.c $(TEST_CFLAGS) $(TEST_LIBS) -o $(TEST_BIN)
+endif
+	./$(TEST_BIN)
 

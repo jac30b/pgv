@@ -13,6 +13,9 @@ RETURNS integer AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION vec_typemodifier_out(integer)
 RETURNS cstring AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
+CREATE FUNCTION vec_cosine_distance(vec, vec)
+RETURNS float4 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+
 --  https://www.postgresql.org/docs/current/sql-createtype.html
 CREATE TYPE vec (
     INPUT = vec_input,

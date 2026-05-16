@@ -3,3 +3,4 @@
 *.bc
 *.so
 .vscode/*
+test_runner

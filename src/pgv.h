@@ -3,8 +3,9 @@
 
 #include "c.h"
 
+#define MAX_VEC_DIM 1024
 
-int vec_sz(int32 dim);
+int32 vec_sz(int32 dim);
 
 typedef struct Vec {
   int32 vl_len_; // varlena header
