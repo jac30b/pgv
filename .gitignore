@@ -4,3 +4,4 @@
 *.so
 .vscode/*
 test_runner
+.idea/*

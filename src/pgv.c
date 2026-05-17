@@ -16,15 +16,12 @@ PG_MODULE_MAGIC;
 // (cstring, oid, integer)
 PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_input);
 Datum vec_input(PG_FUNCTION_ARGS) {
-  Vec *res;
-  int dim;
-  char *str;
   float buf[MAX_VEC_DIM];
   const char *err;
+  Vec *res;
 
-  str = PG_GETARG_CSTRING(0);
-
-  dim = vec_parse(str, buf, MAX_VEC_DIM, &err);
+  const char *str = PG_GETARG_CSTRING(0);
+  const int dim = vec_parse(str, buf, MAX_VEC_DIM, &err);
   if (dim < 0)
     ereport(ERROR, (errmsg("%s", err)));
 
@@ -39,7 +36,7 @@ Datum vec_input(PG_FUNCTION_ARGS) {
 
 PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_output);
 Datum vec_output(PG_FUNCTION_ARGS) {
-  Vec *vec = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  const Vec *vec = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
   StringInfoData buf;
   int i;
 
@@ -84,8 +81,8 @@ Datum vec_typemodifier_in(PG_FUNCTION_ARGS) {
 
 PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_typemodifier_out);
 Datum vec_typemodifier_out(PG_FUNCTION_ARGS) {
-  int32 typemod = PG_GETARG_INT32(0);
   char *buf;
+  const int32 typemod = PG_GETARG_INT32(0);
 
   if (typemod < 0) {
     PG_RETURN_CSTRING(pstrdup(""));
