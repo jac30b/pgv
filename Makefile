@@ -4,7 +4,7 @@ EXTVERSION = 0.0.1
 MODULE_big = pgv
 DATA = $(wildcard sql/*--*--*.sql)
 DATA_built = sql/$(EXTENSION)--$(EXTVERSION).sql
-OBJS = src/pgv.o src/pgv_utils.o
+OBJS = src/pgv.o src/pgv_utils.o src/hnsw.o
 
 OPTFLAGS = -march=native
 
