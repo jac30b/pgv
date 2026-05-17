@@ -115,3 +115,59 @@ Datum vec_cosine_distance(PG_FUNCTION_ARGS) {
 
   PG_RETURN_FLOAT4(distance);
 }
+
+PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_cmp);
+Datum vec_cmp(PG_FUNCTION_ARGS) {
+  Vec *a = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  Vec *b = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+
+  PG_RETURN_INT32(vec_cmp_internal(a, b));
+}
+
+PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_lt);
+Datum vec_lt(PG_FUNCTION_ARGS) {
+  Vec *a = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  Vec *b = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+
+  PG_RETURN_BOOL(vec_cmp_internal(a, b) < 0);
+}
+
+PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_le);
+Datum vec_le(PG_FUNCTION_ARGS) {
+  Vec *a = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  Vec *b = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+
+  PG_RETURN_BOOL(vec_cmp_internal(a, b) <= 0);
+}
+
+PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_eq);
+Datum vec_eq(PG_FUNCTION_ARGS) {
+  Vec *a = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  Vec *b = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+
+  PG_RETURN_BOOL(vec_cmp_internal(a, b) == 0);
+}
+
+PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_ne);
+Datum vec_ne(PG_FUNCTION_ARGS) {
+  Vec *a = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  Vec *b = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+
+  PG_RETURN_BOOL(vec_cmp_internal(a, b) != 0);
+}
+
+PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_ge);
+Datum vec_ge(PG_FUNCTION_ARGS) {
+  Vec *a = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  Vec *b = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+
+  PG_RETURN_BOOL(vec_cmp_internal(a, b) >= 0);
+}
+
+PGDLLEXPORT PG_FUNCTION_INFO_V1(vec_gt);
+Datum vec_gt(PG_FUNCTION_ARGS) {
+  Vec *a = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  Vec *b = (Vec *)PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+
+  PG_RETURN_BOOL(vec_cmp_internal(a, b) > 0);
+}

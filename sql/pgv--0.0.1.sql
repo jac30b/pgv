@@ -1,5 +1,4 @@
-
-CREATE TYPE vec; 
+CREATE TYPE vec;
 
 CREATE FUNCTION vec_input(cstring, oid, integer)
 RETURNS vec AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
@@ -22,4 +21,11 @@ CREATE TYPE vec (
     OUTPUT = vec_output,
     TYPMOD_IN = vec_typemodifier_in,
     TYPMOD_OUT = vec_typemodifier_out
+);
+
+CREATE OPERATOR <-> (
+    LEFTARG = vec,
+    RIGHTARG = vec,
+    PROCEDURE = vec_cosine_distance,
+    COMMUTATOR = <->
 );

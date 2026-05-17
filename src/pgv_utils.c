@@ -1,4 +1,5 @@
 #include "pgv_utils.h"
+
 #include <math.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -25,6 +26,22 @@ float vec_cosine_similarity_internal(Vec *a, Vec *b) {
     return 0.0f;
 
   return dot / (norm_a * norm_b);
+}
+
+int vec_cmp_internal(Vec *a, Vec *b) {
+  int i;
+
+  if (a->dim != b->dim)
+    return (a->dim < b->dim) ? -1 : 1;
+
+  for (i = 0; i < a->dim; i++) {
+    if (a->data[i] < b->data[i])
+      return -1;
+    if (a->data[i] > b->data[i])
+      return 1;
+  }
+
+  return 0;
 }
 
 int vec_parse(const char *str, float *buf, int max_dim, const char **errmsg) {
